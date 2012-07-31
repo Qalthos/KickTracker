@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from datetime import datetime
+from datetime import datetime, timezone
 import locale
 import os.path
 from urllib.request import urlopen
@@ -29,9 +29,7 @@ class TrackerWindow(Gtk.Window):
             proj_box = ProjectBox(url)
             collect.add(proj_box)
 
-        # Docs seem to indicate that callback_data is unnecessary, Python
-        # thinks otherwise
-        GLib.timeout_add(30000, collect.foreach, refresh, None)
+        GLib.timeout_add(30000, refresh, collect)
         scrolly_pane.add_with_viewport(collect)
         self.add(scrolly_pane)
 
@@ -58,7 +56,9 @@ class ProjectBox(Gtk.VBox):
         details.add(self.percent)
 
         self.left = Gtk.Label()
-        self.left.set_text(metadata['time_left'])
+        self.end_date = metadata['end_date']
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        self.left.set_text(str(self.end_date - now))
         details.add(self.left)
 
         self.add(details)
@@ -77,14 +77,12 @@ def project_scrape(url):
     metadata['pretty_percent'] = '%.2f%%' % (percent_raised * 100)
     metadata['pledged'] = locale.currency(float(pledge_div['data-pledged']),
                                           grouping=True)
-    end_date = datetime.strptime(time_div['data-end_time'],
-                                         '%a, %d %b %Y %H:%M:%S %z')
-    now = datetime.now(end_date.tzinfo).replace(microsecond=0)
-    metadata['time_left'] = str(end_date - now)
+    metadata['end_date'] = datetime.strptime(time_div['data-end_time'],
+                                             '%a, %d %b %Y %H:%M:%S %z')
 
     return metadata
 
-def refresh(widget, data=None):
+def refresh(container):
     """
     Refresh the contents of the projects.
 
@@ -93,14 +91,18 @@ def refresh(widget, data=None):
 
     @return True.  This is to keep timeout rescheduling the callback.
     """
-    metadata = project_scrape(widget.title.get_uri())
-    widget.progress.set_fraction(min(1.0, metadata['percent_raised']))
-    widget.pledged.set_text(metadata['pledged'])
-    widget.percent.set_text(metadata['pretty_percent'])
-    widget.left.set_text(metadata['time_left'])
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+
+    for widget in container.get_children():
+        metadata = project_scrape(widget.title.get_uri())
+        widget.progress.set_fraction(min(1.0, metadata['percent_raised']))
+        widget.pledged.set_text(metadata['pledged'])
+        widget.percent.set_text(metadata['pretty_percent'])
+        widget.left.set_text(str(widget.end_date - now))
 
     # Keep going.
     return True
+
 
 if __name__ == '__main__':
     win = TrackerWindow()
