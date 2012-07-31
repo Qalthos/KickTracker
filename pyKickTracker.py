@@ -23,12 +23,15 @@ class TrackerWindow(Gtk.Window):
 
         scrolly_pane = Gtk.ScrolledWindow()
         collect = Gtk.VBox()
+
         for project in tracked_projects:
             url = 'http://www.kickstarter.com/projects/{0}'.format(project)
             proj_box = ProjectBox(url)
             collect.add(proj_box)
 
-        GLib.timeout_add(30000, refresh, collect)
+        # Docs seem to indicate that callback_data is unnecessary, Python
+        # thinks otherwise
+        GLib.timeout_add(30000, collect.foreach, refresh, None)
         scrolly_pane.add_with_viewport(collect)
         self.add(scrolly_pane)
 
@@ -81,15 +84,20 @@ def project_scrape(url):
 
     return metadata
 
-def refresh(container):
-    """Refresh the contents of the projects."""
-    for index, widget in enumerate(container.get_children()):
-        children = widget.get_children()
-        metadata = project_scrape(children[0].get_uri())
-        children[1].set_fraction(min(1.0, metadata['percent_raised']))
-        children[2].get_children()[0].set_text(metadata['pledged'])
-        children[2].get_children()[1].set_text(metadata['pretty_percent'])
-        children[2].get_children()[2].set_text(metadata['time_left'])
+def refresh(widget, data=None):
+    """
+    Refresh the contents of the projects.
+
+    @param widget: A ProjectBox to update.
+    @param data: None.  This is here to keep foreach happy.
+
+    @return True.  This is to keep timeout rescheduling the callback.
+    """
+    metadata = project_scrape(widget.title.get_uri())
+    widget.progress.set_fraction(min(1.0, metadata['percent_raised']))
+    widget.pledged.set_text(metadata['pledged'])
+    widget.percent.set_text(metadata['pretty_percent'])
+    widget.left.set_text(metadata['time_left'])
 
     # Keep going.
     return True
