@@ -24,12 +24,12 @@ class TrackerWindow(Gtk.Window):
         scrolly_pane = Gtk.ScrolledWindow()
         collect = Gtk.VBox()
         for project in tracked_projects:
-            md = project_scrape(project)
+            url = 'http://www.kickstarter.com/projects/{0}'.format(project)
+            md = project_scrape(url)
 
             proj_vbox = Gtk.VBox()
 
-            proj_name = Gtk.Label()
-            proj_name.set_text(md['title'])
+            proj_name = Gtk.LinkButton(url, md['title'])
             proj_vbox.add(proj_name)
 
             progress = Gtk.ProgressBar()
@@ -55,8 +55,7 @@ class TrackerWindow(Gtk.Window):
 
 
 
-def project_scrape(project_id):
-    url = 'http://www.kickstarter.com/projects/{0}'.format(project_id)
+def project_scrape(url):
     raw_html = urlopen(url)
     soup = BeautifulSoup(raw_html)
     pledge_div = soup.find('div', {'id': 'pledged'})
@@ -79,8 +78,8 @@ def project_scrape(project_id):
 def refresh(container):
     """Refresh the contents of the projects."""
     for index, widget in enumerate(container.get_children()):
-        metadata = project_scrape(tracked_projects[index])
         children = widget.get_children()
+        metadata = project_scrape(children[0].get_uri())
         children[1].set_fraction(min(1.0, metadata['percent_raised']))
         children[2].get_children()[0].set_text(metadata['pledged'])
         children[2].get_children()[1].set_text(metadata['pretty_percent'])
