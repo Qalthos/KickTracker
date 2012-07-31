@@ -25,34 +25,40 @@ class TrackerWindow(Gtk.Window):
         collect = Gtk.VBox()
         for project in tracked_projects:
             url = 'http://www.kickstarter.com/projects/{0}'.format(project)
-            md = project_scrape(url)
+            proj_box = ProjectBox(url)
+            collect.add(proj_box)
 
-            proj_vbox = Gtk.VBox()
-
-            proj_name = Gtk.LinkButton(url, md['title'])
-            proj_vbox.add(proj_name)
-
-            progress = Gtk.ProgressBar()
-            progress.set_fraction(md['percent_raised'])
-            proj_vbox.add(progress)
-
-            details = Gtk.HBox()
-            pledged = Gtk.Label()
-            pledged.set_text(md['pledged'])
-            details.add(pledged)
-            percent = Gtk.Label()
-            percent.set_text(md['pretty_percent'])
-            details.add(percent)
-            left = Gtk.Label()
-            left.set_text(md['time_left'])
-            details.add(left)
-            proj_vbox.add(details)
-
-            collect.add(proj_vbox)
         GLib.timeout_add(30000, refresh, collect)
         scrolly_pane.add_with_viewport(collect)
         self.add(scrolly_pane)
 
+
+class ProjectBox(Gtk.VBox):
+    def __init__(self, url):
+        Gtk.VBox.__init__(self)
+        metadata = project_scrape(url)
+        self.title = Gtk.LinkButton(url, metadata['title'])
+        self.add(self.title)
+
+        self.progress = Gtk.ProgressBar()
+        self.progress.set_fraction(metadata['percent_raised'])
+        self.add(self.progress)
+
+        details = Gtk.HBox()
+
+        self.pledged = Gtk.Label()
+        self.pledged.set_text(metadata['pledged'])
+        details.add(self.pledged)
+
+        self.percent = Gtk.Label()
+        self.percent.set_text(metadata['pretty_percent'])
+        details.add(self.percent)
+
+        self.left = Gtk.Label()
+        self.left.set_text(metadata['time_left'])
+        details.add(self.left)
+
+        self.add(details)
 
 
 def project_scrape(url):
