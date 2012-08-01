@@ -53,18 +53,15 @@ class ProjectBox(Gtk.VBox):
 
         details = Gtk.HBox()
 
-        self.pledged = Gtk.Label()
-        self.pledged.set_text(metadata['pledged'])
+        self.pledged = Gtk.Label(metadata['pledged'])
         details.add(self.pledged)
 
-        self.percent = Gtk.Label()
-        self.percent.set_text(metadata['pretty_percent'])
+        self.percent = Gtk.Label(metadata['pretty_percent'])
         details.add(self.percent)
 
-        self.left = Gtk.Label()
         self.end_date = metadata['end_date']
         now = datetime.now(timezone.utc).replace(microsecond=0)
-        self.left.set_text(str(self.end_date - now))
+        self.left = Gtk.Label(str(self.end_date - now))
         details.add(self.left)
 
         self.add(details)
@@ -92,8 +89,7 @@ def refresh(container):
     """
     Refresh the contents of the projects.
 
-    @param widget: A ProjectBox to update.
-    @param data: None.  This is here to keep foreach happy.
+    @param container: The VBox full of ProjBox to update.
 
     @return True.  This is to keep timeout rescheduling the callback.
     """
