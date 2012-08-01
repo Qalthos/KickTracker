@@ -21,17 +21,23 @@ class TrackerWindow(Gtk.Window):
         icon_path = os.path.join(os.path.split(__file__)[0], 'favicon.ico')
         self.set_default_icon(GdkPixbuf.Pixbuf.new_from_file(icon_path))
 
-        scrolly_pane = Gtk.ScrolledWindow()
-        collect = Gtk.VBox()
+        notebook = Gtk.Notebook()
+        self.active = Gtk.VBox()
+        self.complete = Gtk.VBox()
 
         for project in tracked_projects:
             url = 'http://www.kickstarter.com/projects/{0}'.format(project)
             proj_box = ProjectBox(url)
-            collect.add(proj_box)
+            if proj_box.end_date > datetime.now(timezone.utc):
+                self.active.pack_start(proj_box, False, False, 0)
+            else:
+                proj_box.left.set_text('')
+                self.complete.pack_start(proj_box, False, False, 0)
 
-        GLib.timeout_add(30000, refresh, collect)
-        scrolly_pane.add_with_viewport(collect)
-        self.add(scrolly_pane)
+        GLib.timeout_add(30000, refresh, self.active)
+        notebook.append_page(self.active, Gtk.Label('Acive Projects'))
+        notebook.append_page(self.complete, Gtk.Label('Completed Projects'))
+        self.add(notebook)
 
 
 class ProjectBox(Gtk.VBox):
@@ -98,7 +104,12 @@ def refresh(container):
         widget.progress.set_fraction(min(1.0, metadata['percent_raised']))
         widget.pledged.set_text(metadata['pledged'])
         widget.percent.set_text(metadata['pretty_percent'])
-        widget.left.set_text(str(widget.end_date - now))
+        if widget.end_date > now:
+            widget.left.set_text(str(widget.end_date - now))
+        else:
+            widget.left.set_text('')
+            win.complete.pack_start(widget, False, False, 0)
+            container.remove(widget)
 
     # Keep going.
     return True
