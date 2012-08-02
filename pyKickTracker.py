@@ -72,14 +72,18 @@ class ProjectBox(Gtk.VBox):
         details = Gtk.HBox()
 
         self.pledged = Gtk.Label(metadata['pledged'])
-        details.add(self.pledged)
+        self.pledged.set_alignment(0, 0.5)
+        self.pledged.set_width_chars(10)
+        details.pack_start(self.pledged, False, False, 0)
 
         self.percent = Gtk.Label(metadata['pretty_percent'])
+        self.percent.set_alignment(1, 0.5)
         details.add(self.percent)
 
         self.end_date = metadata['end_date']
         now = datetime.now(timezone.utc).replace(microsecond=0)
         self.left = Gtk.Label(str(self.end_date - now))
+        self.left.set_alignment(1, 0.5)
         details.add(self.left)
 
         self.add(details)
