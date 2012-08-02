@@ -48,8 +48,14 @@ class ProjectBox(Gtk.VBox):
     def __init__(self, url):
         Gtk.VBox.__init__(self)
         metadata = project_scrape(url)
+        linkbar = Gtk.HBox()
+
         self.title = Gtk.LinkButton(url, metadata['title'])
-        self.add(self.title)
+        linkbar.pack_start(self.title, True, True, 0)
+
+        self.updates = Gtk.LinkButton(url + '/posts', metadata['updates'])
+        linkbar.pack_start(self.updates, False, False, 0)
+        self.add(linkbar)
 
         self.progress = Gtk.ProgressBar()
         self.progress.set_fraction(metadata['percent_raised'])
@@ -86,8 +92,11 @@ def project_scrape(url):
                                           grouping=True)
     metadata['end_date'] = datetime.strptime(time_div['data-end_time'],
                                              '%a, %d %b %Y %H:%M:%S %z')
+    updates = soup.find('span', {'id': 'updates_count'})
+    metadata['updates'] = int(updates['data-updates-count'])
 
     return metadata
+
 
 def refresh(container):
     """
