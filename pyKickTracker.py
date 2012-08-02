@@ -8,11 +8,7 @@ from bs4 import BeautifulSoup
 
 from gi.repository import Gtk, GdkPixbuf, GLib
 
-tracked_projects = ['playroom/killer-bunnies-quest-deluxe',
-                    'hiddenpath/defense-grid-2',
-                    'ouya/ouya-a-new-kind-of-video-game-console',
-                    '597507018/pebble-e-paper-watch-for-iphone-and-android',
-                   ]
+profile = '1141182704'
 
 class TrackerWindow(Gtk.Window):
     def __init__(self):
@@ -27,8 +23,20 @@ class TrackerWindow(Gtk.Window):
         self.active = Gtk.VBox()
         self.complete = Gtk.VBox()
 
-        for project in tracked_projects:
-            url = 'http://www.kickstarter.com/projects/{0}'.format(project)
+        # Build a list of backed and following projects
+        projects = []
+        for suffix in ['backed', 'following']:
+            url = 'http://www.kickstarter.com/profiles/{0}/projects/{1}' \
+                   .format(profile, suffix)
+            soup = BeautifulSoup(urlopen(url)).findAll('div', 'project-card')
+            for card in soup:
+                # The urls have URL arguments, but that means we can't build
+                # off them easily.  The arguments are unnecessary, so strip
+                # them.
+                projects.append(card.h2.a['href'].split('?')[0])
+
+        for project in projects:
+            url = 'http://www.kickstarter.com{0}'.format(project)
             proj_box = ProjectBox(url)
             if proj_box.end_date > datetime.now(timezone.utc):
                 self.active.pack_start(proj_box, False, False, 0)
