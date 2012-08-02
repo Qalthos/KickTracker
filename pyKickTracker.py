@@ -22,6 +22,8 @@ class TrackerWindow(Gtk.Window):
         self.set_default_icon(GdkPixbuf.Pixbuf.new_from_file(icon_path))
 
         notebook = Gtk.Notebook()
+        active_scroll = Gtk.ScrolledWindow()
+        complete_scroll = Gtk.ScrolledWindow()
         self.active = Gtk.VBox()
         self.complete = Gtk.VBox()
 
@@ -35,8 +37,10 @@ class TrackerWindow(Gtk.Window):
                 self.complete.pack_start(proj_box, False, False, 0)
 
         GLib.timeout_add(30000, refresh, self.active)
-        notebook.append_page(self.active, Gtk.Label('Acive Projects'))
-        notebook.append_page(self.complete, Gtk.Label('Completed Projects'))
+        active_scroll.add_with_viewport(self.active)
+        complete_scroll.add_with_viewport(self.complete)
+        notebook.append_page(active_scroll, Gtk.Label('Acive Projects'))
+        notebook.append_page(complete_scroll, Gtk.Label('Completed Projects'))
         self.add(notebook)
 
 
