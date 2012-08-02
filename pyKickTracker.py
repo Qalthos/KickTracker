@@ -31,7 +31,7 @@ class TrackerWindow(Gtk.Window):
             if proj_box.end_date > datetime.now(timezone.utc):
                 self.active.pack_start(proj_box, False, False, 0)
             else:
-                proj_box.left.set_text('')
+                proj_box.left.set_text('Done!')
                 self.complete.pack_start(proj_box, False, False, 0)
 
         GLib.timeout_add(30000, refresh, self.active)
@@ -103,7 +103,7 @@ def refresh(container):
         if widget.end_date > now:
             widget.left.set_text(str(widget.end_date - now))
         else:
-            widget.left.set_text('')
+            widget.left.set_text('Done!')
             win.complete.pack_start(widget, False, False, 0)
             container.remove(widget)
 
