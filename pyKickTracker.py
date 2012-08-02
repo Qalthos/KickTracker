@@ -17,7 +17,7 @@ tracked_projects = ['playroom/killer-bunnies-quest-deluxe',
 class TrackerWindow(Gtk.Window):
     def __init__(self):
         Gtk.Window.__init__(self)
-        self.set_default_size(400, 100)
+        self.set_default_size(400, 250)
         icon_path = os.path.join(os.path.split(__file__)[0], 'favicon.ico')
         self.set_default_icon(GdkPixbuf.Pixbuf.new_from_file(icon_path))
 
