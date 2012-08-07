@@ -1,8 +1,13 @@
-#!/usr/bin/env python3
-from datetime import datetime, timezone
+#!/usr/bin/env python
+from datetime import datetime
 import locale
 import os.path
-from urllib.request import urlopen
+import sys
+
+if sys.version_info.major == 2:
+    from urllib2 import urlopen
+else:
+    from urllib.request import urlopen
 
 from bs4 import BeautifulSoup
 
@@ -38,7 +43,7 @@ class TrackerWindow(Gtk.Window):
         for project in projects:
             url = 'http://www.kickstarter.com{0}'.format(project)
             proj_box = ProjectBox(url)
-            if proj_box.end_date > datetime.now(timezone.utc):
+            if proj_box.end_date > datetime.utcnow():
                 self.active.pack_start(proj_box, False, False, 0)
             else:
                 proj_box.left.set_text('Done!')
@@ -81,7 +86,7 @@ class ProjectBox(Gtk.VBox):
         details.add(self.percent)
 
         self.end_date = metadata['end_date']
-        now = datetime.now(timezone.utc).replace(microsecond=0)
+        now = datetime.utcnow().replace(microsecond=0)
         self.left = Gtk.Label(str(self.end_date - now))
         self.left.set_alignment(1, 0.5)
         details.add(self.left)
@@ -102,8 +107,10 @@ def project_scrape(url):
     metadata['pretty_percent'] = '%.2f%%' % (percent_raised * 100)
     metadata['pledged'] = locale.currency(float(pledge_div['data-pledged']),
                                           grouping=True)
-    metadata['end_date'] = datetime.strptime(time_div['data-end_time'],
-                                             '%a, %d %b %Y %H:%M:%S %z')
+    # Cut the timezone info off the string so we don't have to deal with it.
+    time_string = time_div['data-end_time'].rsplit(' ', 1)[0]
+    metadata['end_date'] = datetime.strptime(time_string,
+                                             '%a, %d %b %Y %H:%M:%S')
     updates = soup.find('span', {'id': 'updates_count'})
     metadata['updates'] = int(updates['data-updates-count'])
 
@@ -118,7 +125,7 @@ def refresh(container):
 
     @return True.  This is to keep timeout rescheduling the callback.
     """
-    now = datetime.now(timezone.utc).replace(microsecond=0)
+    now = datetime.utcnow().replace(microsecond=0)
 
     for widget in container.get_children():
         metadata = project_scrape(widget.title.get_uri())
