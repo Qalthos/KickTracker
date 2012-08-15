@@ -21,6 +21,9 @@ class TrackerWindow(Gtk.Window):
         Gtk.Window.__init__(self)
         self.set_default_size(400, 250)
         icon_path = os.path.join(os.path.split(__file__)[0], 'favicon.ico')
+        if not os.path.exists(icon_path):
+            # download it
+            urlretrieve('http://www.kickstarter.com/favicon.ico', icon_path)
         self.set_default_icon(GdkPixbuf.Pixbuf.new_from_file(icon_path))
 
         notebook = Gtk.Notebook()
