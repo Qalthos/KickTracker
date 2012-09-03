@@ -28,17 +28,10 @@ class TrackerWindow(Gtk.Window):
         self.active = Gtk.VBox()
         self.complete = Gtk.VBox()
 
-        # Build a list of backed and following projects
-        projects = []
-        for suffix in ['backed', 'following']:
-            url = 'http://www.kickstarter.com/profiles/{0}/projects/{1}' \
-                   .format(profile, suffix)
-            soup = BeautifulSoup(urlopen(url)).findAll('div', 'project-card')
-            for card in soup:
-                # The urls have URL arguments, but that means we can't build
-                # off them easily.  The arguments are unnecessary, so strip
-                # them.
-                projects.append(card.h2.a['href'].split('?')[0])
+        # Build a list of backed projects
+        url = 'http://www.kickstarter.com/profile/{0}'.format(profile)
+        soup = BeautifulSoup(urlopen(url)).findAll('a', 'project_item')
+        projects = map(lambda x: x['href'], soup)
 
         for project in projects:
             url = 'http://www.kickstarter.com{0}'.format(project)
