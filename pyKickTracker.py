@@ -43,6 +43,7 @@ class TrackerWindow(Gtk.Window):
                 self.complete.pack_start(proj_box, False, False, 0)
 
         GLib.timeout_add(30000, refresh, self.active)
+        GLib.timeout_add(1000, refresh_time, self.active)
         active_scroll.add_with_viewport(self.active)
         complete_scroll.add_with_viewport(self.complete)
         notebook.append_page(active_scroll, Gtk.Label('Acive Projects'))
@@ -118,13 +119,20 @@ def refresh(container):
 
     @return True.  This is to keep timeout rescheduling the callback.
     """
-    now = datetime.utcnow().replace(microsecond=0)
 
     for widget in container.get_children():
         metadata = project_scrape(widget.title.get_uri())
         widget.progress.set_fraction(min(1.0, metadata['percent_raised']))
         widget.pledged.set_text(metadata['pledged'])
         widget.percent.set_text(metadata['pretty_percent'])
+
+    # Keep going.
+    return True
+
+
+def refresh_time(container):
+    now = datetime.utcnow().replace(microsecond=0)
+    for widget in container.get_children():
         if widget.end_date > now:
             widget.left.set_text(str(widget.end_date - now))
         else:
@@ -132,7 +140,6 @@ def refresh(container):
             win.complete.pack_start(widget, False, False, 0)
             container.remove(widget)
 
-    # Keep going.
     return True
 
 
