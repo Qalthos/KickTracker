@@ -106,7 +106,7 @@ def project_scrape(url):
     metadata['end_date'] = datetime.strptime(time_string,
                                              '%a, %d %b %Y %H:%M:%S')
     updates = soup.find('span', {'id': 'updates_count'})
-    metadata['updates'] = int(updates['data-updates-count'])
+    metadata['updates'] = updates['data-updates-count']
 
     return metadata
 
@@ -125,6 +125,7 @@ def refresh(container):
         widget.progress.set_fraction(min(1.0, metadata['percent_raised']))
         widget.pledged.set_text(metadata['pledged'])
         widget.percent.set_text(metadata['pretty_percent'])
+        widget.updates.set_label(metadata['updates'])
 
     # Keep going.
     return True
