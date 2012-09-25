@@ -100,6 +100,10 @@ class SettingsPage(Gtk.VBox):
         self.projects = Gtk.TextView()
         self.add(self.projects)
 
+        self.add(Gtk.Label("Don't show me projects that have closed more than this many days ago"))
+        self.timeout = Gtk.Entry()
+        self.add(self.timeout)
+
         button_box = Gtk.HButtonBox()
 
         self.rescan = Gtk.Button('Rescan Projects')
@@ -125,11 +129,13 @@ class SettingsPage(Gtk.VBox):
                 .get_text(self.projects.get_buffer().get_start_iter(),
                           self.projects.get_buffer().get_end_iter(),
                           False)
+            self.settings['projects']['hide_after'] = self.timeout.get_text()
             config.write_config(self.settings)
             win.load_projects()
         else:
             self.profile.set_text(self.settings['user']['profile'])
             self.projects.get_buffer().set_text(self.settings['projects']['other'])
+            self.timeout.set_text(self.settings['projects']['hide_after'])
 
 
 def project_scrape(url):
