@@ -88,6 +88,53 @@ class ProjectBox(Gtk.VBox):
         self.add(details)
 
 
+class SettingsPage(Gtk.VBox):
+    def __init__(self):
+        Gtk.VBox.__init__(self)
+
+        self.add(Gtk.Label("Kickstarter profile"))
+        self.profile = Gtk.TextView()
+        self.add(self.profile)
+
+        self.add(Gtk.Label("Manually tracked projects"))
+        self.projects = Gtk.TextView()
+        self.add(self.projects)
+
+        button_box = Gtk.HButtonBox()
+
+        self.rescan = Gtk.Button('Rescan Projects')
+        button_box.add(self.rescan)
+
+        self.cancel = Gtk.Button('Reset')
+        button_box.add(self.cancel)
+
+        self.add(button_box)
+
+        self.settings = config.get_config()
+
+        # Connect signals to buttons
+        self.rescan.connect("clicked", self.save_or_reset)
+        self.cancel.connect("clicked", self.save_or_reset)
+
+        self.save_or_reset()
+
+    def save_or_reset(self, button=None, event=None):
+        if button == self.rescan:
+            self.settings['user']['profile'] = self.profile.get_buffer() \
+                .get_text(self.profile.get_buffer().get_start_iter(),
+                          self.profile.get_buffer().get_end_iter(),
+                          False)
+            self.settings['projects']['other'] = self.projects.get_buffer() \
+                .get_text(self.projects.get_buffer().get_start_iter(),
+                          self.projects.get_buffer().get_end_iter(),
+                          False)
+            config.write_config(self.settings)
+            win.load_projects()
+        else:
+            self.profile.get_buffer().set_text(self.settings['user']['profile'])
+            self.projects.get_buffer().set_text(self.settings['projects']['other'])
+
+
 def project_scrape(url):
     raw_html = urlopen(url)
     soup = BeautifulSoup(raw_html)
