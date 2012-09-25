@@ -93,7 +93,7 @@ class SettingsPage(Gtk.VBox):
         Gtk.VBox.__init__(self)
 
         self.add(Gtk.Label("Kickstarter profile"))
-        self.profile = Gtk.TextView()
+        self.profile = Gtk.Entry()
         self.add(self.profile)
 
         self.add(Gtk.Label("Manually tracked projects"))
@@ -120,10 +120,7 @@ class SettingsPage(Gtk.VBox):
 
     def save_or_reset(self, button=None, event=None):
         if button == self.rescan:
-            self.settings['user']['profile'] = self.profile.get_buffer() \
-                .get_text(self.profile.get_buffer().get_start_iter(),
-                          self.profile.get_buffer().get_end_iter(),
-                          False)
+            self.settings['user']['profile'] = self.profile.get_text()
             self.settings['projects']['other'] = self.projects.get_buffer() \
                 .get_text(self.projects.get_buffer().get_start_iter(),
                           self.projects.get_buffer().get_end_iter(),
@@ -131,7 +128,7 @@ class SettingsPage(Gtk.VBox):
             config.write_config(self.settings)
             win.load_projects()
         else:
-            self.profile.get_buffer().set_text(self.settings['user']['profile'])
+            self.profile.set_text(self.settings['user']['profile'])
             self.projects.get_buffer().set_text(self.settings['projects']['other'])
 
 
