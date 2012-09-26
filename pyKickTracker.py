@@ -214,9 +214,14 @@ def refresh_time(container):
     return True
 
 
+def save_and_quit(window, event):
+    config.write_config(window.settings_page.settings)
+    Gtk.main_quit()
+
+
 if __name__ == '__main__':
     win = TrackerWindow()
-    win.connect("delete-event", Gtk.main_quit)
+    win.connect("delete-event", save_and_quit)
     win.show_all()
     win.load_projects()
     Gtk.main()
