@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from datetime import datetime
+from datetime import datetime, timedelta
 import locale
 import os.path
 import sys
@@ -49,10 +49,18 @@ class TrackerWindow(Gtk.Window):
             for widget in box.get_children():
                 box.remove(widget)
 
+        now = datetime.utcnow()
         for project in projects:
             url = 'http://www.kickstarter.com{0}'.format(project)
             proj_box = ProjectBox(url)
-            if proj_box.end_date > datetime.utcnow():
+            try:
+                timeout = int(self.settings_page.settings['projects']['hide_after'])
+                if proj_box.end_date + timedelta(days=timeout) < now:
+                    # For simplicity, hide projects older than a certain time
+                    continue
+            except ValueError:
+                pass
+            if proj_box.end_date > now:
                 self.active.pack_start(proj_box, False, False, 0)
             else:
                 proj_box.left.set_text('Done!')
