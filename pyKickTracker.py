@@ -143,11 +143,11 @@ class SettingsPage(Gtk.VBox):
     def __init__(self):
         Gtk.VBox.__init__(self)
 
-        self.add(Gtk.Label("Kickstarter profile"))
+        self.add(Gtk.Label("Kickstarter profile ID (http://www.kickstarter.com/profile/<id>)"))
         self.profile = Gtk.Entry()
         self.add(self.profile)
 
-        self.add(Gtk.Label("Manually tracked projects"))
+        self.add(Gtk.Label("Manually tracked projects (starting with /projects)"))
         self.projects = Gtk.TextView()
         self.add(self.projects)
 
