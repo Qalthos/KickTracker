@@ -38,6 +38,7 @@ class TrackerWindow(Gtk.Window):
         self.add(notebook)
 
         self.loaded_projects = dict()
+        self.cached_projects = dict()
 
     def load_projects(self):
         # Build a list of backed projects
@@ -46,14 +47,26 @@ class TrackerWindow(Gtk.Window):
         soup = BeautifulSoup(urlopen(url)).findAll('a', 'project_item')
         projects = set(map(lambda x: x['href'], soup)).union(set(filter(bool,
             self.settings_page.settings['projects']['other'].split(', '))))
+        now = datetime.utcnow()
 
         # Remove projects no longer visible
         to_remove = set(self.loaded_projects.keys()).difference(projects)
         for project in to_remove:
             widget = self.loaded_projects.pop(project)
             widget.get_parent().remove(widget)
+            self.cached_projects[project] = widget
 
-        now = datetime.utcnow()
+        # And add the ones that are already cached
+        to_add = set(self.cached_projects.keys()).intersection(projects)
+        for project in to_add:
+            widget = self.cached_projects.pop(project)
+            if widget.end_date > now:
+                self.active.pack_start(widget, False, False, 0)
+            else:
+                widget.left.set_text('Done!')
+                self.complete.pack_start(widget, False, False, 0)
+            self.loaded_projects[project] = widget
+
         # Filter out the projects that don't need to be replaced
         projects.difference_update(set(self.loaded_projects.keys()))
         for project in projects:
