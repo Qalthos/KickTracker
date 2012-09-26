@@ -42,8 +42,8 @@ class TrackerWindow(Gtk.Window):
         url = 'http://www.kickstarter.com/profile/{0}' \
             .format(self.settings_page.settings['user']['profile'])
         soup = BeautifulSoup(urlopen(url)).findAll('a', 'project_item')
-        projects = list(map(lambda x: x['href'], soup)) + \
-            self.settings_page.settings['projects']['other'].split(', ')
+        projects = set(map(lambda x: x['href'], soup)).union(set(filter(bool,
+            self.settings_page.settings['projects']['other'].split(', '))))
 
         for box in [self.active, self.complete]:
             for widget in box.get_children():
