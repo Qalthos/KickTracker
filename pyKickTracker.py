@@ -37,6 +37,8 @@ class TrackerWindow(Gtk.Window):
         notebook.append_page(self.settings_page, Gtk.Label('Settings'))
         self.add(notebook)
 
+        self.loaded_projects = dict()
+
     def load_projects(self):
         # Build a list of backed projects
         url = 'http://www.kickstarter.com/profile/{0}' \
@@ -45,11 +47,15 @@ class TrackerWindow(Gtk.Window):
         projects = set(map(lambda x: x['href'], soup)).union(set(filter(bool,
             self.settings_page.settings['projects']['other'].split(', '))))
 
-        for box in [self.active, self.complete]:
-            for widget in box.get_children():
-                box.remove(widget)
+        # Remove projects no longer visible
+        to_remove = set(self.loaded_projects.keys()).difference(projects)
+        for project in to_remove:
+            widget = self.loaded_projects.pop(project)
+            widget.get_parent().remove(widget)
 
         now = datetime.utcnow()
+        # Filter out the projects that don't need to be replaced
+        projects.difference_update(set(self.loaded_projects.keys()))
         for project in projects:
             url = 'http://www.kickstarter.com{0}'.format(project)
             proj_box = ProjectBox(url)
@@ -65,6 +71,8 @@ class TrackerWindow(Gtk.Window):
             else:
                 proj_box.left.set_text('Done!')
                 self.complete.pack_start(proj_box, False, False, 0)
+
+            self.loaded_projects[project] = proj_box
 
         for box in [self.active, self.complete]:
             box.show_all()
