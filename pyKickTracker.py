@@ -25,6 +25,12 @@ class TrackerWindow(Gtk.Window):
         notebook = Gtk.Notebook()
         active_scroll = Gtk.ScrolledWindow()
         complete_scroll = Gtk.ScrolledWindow()
+        self.default_texts = [
+            Gtk.Label('No acive projects found.  Go to the settings tab to\n' \
+                'add some more.'),
+            Gtk.Label('No completed projects found.  Go to the settings tab\n'\
+                'and increase the cutoff date or add more projects'),
+            ]
         self.active = Gtk.VBox()
         self.complete = Gtk.VBox()
 
@@ -87,7 +93,9 @@ class TrackerWindow(Gtk.Window):
 
             self.loaded_projects[project] = proj_box
 
-        for box in [self.active, self.complete]:
+        for index, box in enumerate([self.active, self.complete]):
+            if not box.get_children():
+                box.add(self.default_texts[index])
             box.show_all()
 
         GLib.timeout_add(30000, refresh, self.active)
@@ -216,6 +224,8 @@ def refresh(container):
     """
 
     for widget in container.get_children():
+        if widget in win.default_texts:
+            continue
         metadata = project_scrape(widget.title.get_uri())
         widget.progress.set_fraction(min(1.0, metadata['percent_raised']))
         widget.pledged.set_text(metadata['pledged'])
@@ -237,6 +247,8 @@ def refresh_time(container):
 
     now = datetime.utcnow().replace(microsecond=0)
     for widget in container.get_children():
+        if widget in win.default_texts:
+            continue
         if widget.end_date > now:
             widget.left.set_text(str(widget.end_date - now))
         else:
