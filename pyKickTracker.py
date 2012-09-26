@@ -125,16 +125,18 @@ class SettingsPage(Gtk.VBox):
     def save_or_reset(self, button=None, event=None):
         if button == self.rescan:
             self.settings['user']['profile'] = self.profile.get_text()
-            self.settings['projects']['other'] = self.projects.get_buffer() \
-                .get_text(self.projects.get_buffer().get_start_iter(),
-                          self.projects.get_buffer().get_end_iter(),
-                          False)
+            self.settings['projects']['other'] = ', '.join(
+                self.projects.get_buffer().get_text(
+                    self.projects.get_buffer().get_start_iter(),
+                    self.projects.get_buffer().get_end_iter(),
+                    False).split('\n'))
             self.settings['projects']['hide_after'] = self.timeout.get_text()
             config.write_config(self.settings)
             win.load_projects()
         else:
             self.profile.set_text(self.settings['user']['profile'])
-            self.projects.get_buffer().set_text(self.settings['projects']['other'])
+            self.projects.get_buffer().set_text('\n'.join(
+                self.settings['projects']['other'].split(', ')))
             self.timeout.set_text(self.settings['projects']['hide_after'])
 
 
