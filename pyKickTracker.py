@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup
 
 from gi.repository import Gtk, GdkPixbuf, GLib
 
-profile = '1141182704'
+import config
 
 class TrackerWindow(Gtk.Window):
     def __init__(self):
@@ -28,10 +28,22 @@ class TrackerWindow(Gtk.Window):
         self.active = Gtk.VBox()
         self.complete = Gtk.VBox()
 
+        self.settings_page = SettingsPage()
+
+        active_scroll.add_with_viewport(self.active)
+        complete_scroll.add_with_viewport(self.complete)
+        notebook.append_page(active_scroll, Gtk.Label('Acive Projects'))
+        notebook.append_page(complete_scroll, Gtk.Label('Completed Projects'))
+        notebook.append_page(self.settings_page, Gtk.Label('Settings'))
+        self.add(notebook)
+
+    def load_projects(self):
         # Build a list of backed projects
-        url = 'http://www.kickstarter.com/profile/{0}'.format(profile)
+        url = 'http://www.kickstarter.com/profile/{0}' \
+            .format(self.settings_page.settings['user']['profile'])
         soup = BeautifulSoup(urlopen(url)).findAll('a', 'project_item')
-        projects = map(lambda x: x['href'], soup)
+        projects = list(map(lambda x: x['href'], soup)) + \
+            self.settings_page.settings['projects']['other'].split(', ')
 
         for project in projects:
             url = 'http://www.kickstarter.com{0}'.format(project)
@@ -42,13 +54,11 @@ class TrackerWindow(Gtk.Window):
                 proj_box.left.set_text('Done!')
                 self.complete.pack_start(proj_box, False, False, 0)
 
+        for box in [self.active, self.complete]:
+            box.show_all()
+
         GLib.timeout_add(30000, refresh, self.active)
         GLib.timeout_add(1000, refresh_time, self.active)
-        active_scroll.add_with_viewport(self.active)
-        complete_scroll.add_with_viewport(self.complete)
-        notebook.append_page(active_scroll, Gtk.Label('Acive Projects'))
-        notebook.append_page(complete_scroll, Gtk.Label('Completed Projects'))
-        self.add(notebook)
 
 
 class ProjectBox(Gtk.VBox):
@@ -179,11 +189,19 @@ def refresh(container):
         widget.percent.set_text(metadata['pretty_percent'])
         widget.updates.set_label(metadata['updates'])
 
-    # Keep going.
     return True
 
 
 def refresh_time(container):
+    """
+    Refresh the project countdown for each project.  If the project has
+    expired, move the ProjBox to the completed tab.
+
+    @param container: The VBox full of ProjBox to update.
+
+    @return True.  This is to keep timeout rescheduling the callback.
+    """
+
     now = datetime.utcnow().replace(microsecond=0)
     for widget in container.get_children():
         if widget.end_date > now:
@@ -200,4 +218,5 @@ if __name__ == '__main__':
     win = TrackerWindow()
     win.connect("delete-event", Gtk.main_quit)
     win.show_all()
+    win.load_projects()
     Gtk.main()
