@@ -45,6 +45,10 @@ class TrackerWindow(Gtk.Window):
         projects = list(map(lambda x: x['href'], soup)) + \
             self.settings_page.settings['projects']['other'].split(', ')
 
+        for box in [self.active, self.complete]:
+            for widget in box.get_children():
+                box.remove(widget)
+
         for project in projects:
             url = 'http://www.kickstarter.com{0}'.format(project)
             proj_box = ProjectBox(url)
