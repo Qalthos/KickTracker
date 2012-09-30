@@ -117,18 +117,15 @@ class ProjectBox(Gtk.VBox):
 
         self.progress = Gtk.ProgressBar()
         self.progress.set_fraction(metadata['percent_raised'])
+        self.progress.set_text(metadata['pretty_percent'])
+        self.progress.set_show_text(True)
         self.add(self.progress)
 
         details = Gtk.HBox()
-
         self.pledged = Gtk.Label(metadata['pledged'])
         self.pledged.set_alignment(0, 0.5)
         self.pledged.set_width_chars(10)
         details.pack_start(self.pledged, False, False, 0)
-
-        self.percent = Gtk.Label(metadata['pretty_percent'])
-        self.percent.set_alignment(1, 0.5)
-        details.add(self.percent)
 
         self.end_date = metadata['end_date']
         now = datetime.utcnow().replace(microsecond=0)
@@ -229,9 +226,10 @@ def refresh(container):
         if widget in win.default_texts:
             continue
         metadata = project_scrape(widget.title.get_uri())
-        widget.progress.set_fraction(min(1.0, metadata['percent_raised']))
+        widget.progress.set_fraction(metadata['percent_raised'])
+        widget.progress.set_text(metadata['pretty_percent'])
+        widget.progress.set_show_text(True)
         widget.pledged.set_text(metadata['pledged'])
-        widget.percent.set_text(metadata['pretty_percent'])
         widget.updates.set_label(metadata['updates'])
 
     return True
