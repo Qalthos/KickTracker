@@ -196,19 +196,21 @@ def project_scrape(url):
     soup = BeautifulSoup(raw_html)
     pledge_div = soup.find('div', {'id': 'pledged'})
     time_div = soup.find('span', {'id': 'project_duration_data'})
+    backers = soup.find('div', {'id': 'backers_count'})
+    updates = soup.find('span', {'id': 'updates_count'})
+
+    # Cut the timezone info off the string so we don't have to deal with it.
+    time_string = time_div['data-end_time'].rsplit(' ', 1)[0]
 
     metadata = dict()
     metadata['title'] = soup.find('h1', {'id': 'title'}).a.string
-    percent_raised = float(pledge_div['data-percent-raised'])
-    metadata['percent_raised'] = min(percent_raised, 1.0)
+    metadata['percent_raised'] = float(pledge_div['data-percent-raised'])
     metadata['pretty_percent'] = '%.2f%%' % (percent_raised * 100)
+    metadata['backers'] = backers['data-backers-count']
     metadata['pledged'] = locale.currency(float(pledge_div['data-pledged']),
                                           grouping=True)
-    # Cut the timezone info off the string so we don't have to deal with it.
-    time_string = time_div['data-end_time'].rsplit(' ', 1)[0]
     metadata['end_date'] = datetime.strptime(time_string,
                                              '%a, %d %b %Y %H:%M:%S')
-    updates = soup.find('span', {'id': 'updates_count'})
     metadata['updates'] = updates['data-updates-count']
 
     return metadata
