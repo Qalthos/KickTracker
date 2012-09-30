@@ -133,6 +133,10 @@ class ProjectBox(Gtk.VBox):
         self.left.set_alignment(1, 0.5)
         details.add(self.left)
 
+        self.backers = Gtk.Label(metadata['backers'])
+        self.backers.set_alignment(1, 0.5)
+        details.add(self.backers)
+
         self.add(details)
 
 
@@ -230,6 +234,7 @@ def refresh(container):
         widget.progress.set_text(metadata['pretty_percent'])
         widget.progress.set_show_text(True)
         widget.pledged.set_text(metadata['pledged'])
+        widget.backers.set_text(metadata['backers'])
         widget.updates.set_label(metadata['updates'])
 
     return True
