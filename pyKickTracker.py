@@ -99,46 +99,81 @@ class TrackerWindow(Gtk.Window):
                 box.add(self.default_texts[index])
             box.show_all()
 
-        GLib.timeout_add(30000, refresh, self.active)
-        GLib.timeout_add(1000, refresh_time, self.active)
+        GLib.timeout_add_seconds(1, refresh_time, self.active)
 
 
 class ProjectBox(Gtk.VBox):
     def __init__(self, url):
         Gtk.VBox.__init__(self)
-        metadata = project_scrape(url)
+        self.url = url
+        self.done = False
+
         linkbar = Gtk.HBox()
-
-        self.title = Gtk.LinkButton(url, metadata['title'])
+        self.title = Gtk.LinkButton(url)
         linkbar.pack_start(self.title, True, True, 0)
-
-        self.updates = Gtk.LinkButton(url + '/posts', metadata['updates'])
+        self.updates = Gtk.LinkButton(url + '/posts')
         linkbar.pack_start(self.updates, False, False, 0)
         self.add(linkbar)
 
         self.progress = Gtk.ProgressBar()
-        self.progress.set_fraction(metadata['percent_raised'])
-        self.progress.set_text(metadata['pretty_percent'])
         self.progress.set_show_text(True)
         self.add(self.progress)
 
         details = Gtk.HBox()
-        self.pledged = Gtk.Label(metadata['pledged'])
+        self.pledged = Gtk.Label()
         self.pledged.set_alignment(0, 0.5)
         self.pledged.set_width_chars(10)
         details.pack_start(self.pledged, False, False, 0)
 
-        self.end_date = metadata['end_date']
-        now = datetime.utcnow().replace(microsecond=0)
-        self.left = Gtk.Label(str(self.end_date - now))
+        self.left = Gtk.Label()
         self.left.set_alignment(1, 0.5)
         details.add(self.left)
 
-        self.backers = Gtk.Label(metadata['backers'])
+        self.backers = Gtk.Label()
         self.backers.set_alignment(1, 0.5)
         details.add(self.backers)
 
         self.add(details)
+
+        metadata = project_scrape(url)
+        if metadata:
+            self.setup(metadata)
+
+    def setup(self, metadata):
+        self.title.set_label(metadata['title'])
+        self.updates.set_label(metadata['updates'])
+
+        self.progress.set_fraction(metadata['percent_raised'])
+        self.progress.set_text(metadata['pretty_percent'])
+
+        self.pledged.set_text(metadata['pledged'])
+        self.end_date = metadata['end_date']
+        now = datetime.utcnow().replace(microsecond=0)
+        self.left.set_text(str(self.end_date - now))
+        self.backers.set_text(metadata['backers'])
+
+        GLib.timeout_add_seconds(30, self.refresh)
+
+    def refresh(self):
+        """
+        Refresh the contents of the projects.
+
+        @param container: The VBox full of ProjBox to update.
+
+        @return True.  This is to keep timeout rescheduling the callback.
+        """
+
+        metadata = project_scrape(self.url)
+        if metadata:
+            if not self.done:
+                self.progress.set_fraction(metadata['percent_raised'])
+                self.progress.set_text(metadata['pretty_percent'])
+                self.progress.set_show_text(True)
+                self.pledged.set_text(metadata['pledged'])
+                self.backers.set_text(metadata['backers'])
+            self.updates.set_label(metadata['updates'])
+
+        return True
 
 
 class SettingsPage(Gtk.VBox):
@@ -222,28 +257,6 @@ def project_scrape(url):
     return metadata
 
 
-def refresh(container):
-    """
-    Refresh the contents of the projects.
-
-    @param container: The VBox full of ProjBox to update.
-
-    @return True.  This is to keep timeout rescheduling the callback.
-    """
-
-    for widget in container.get_children():
-        if widget in win.default_texts:
-            continue
-        metadata = project_scrape(widget.title.get_uri())
-        widget.progress.set_fraction(metadata['percent_raised'])
-        widget.progress.set_text(metadata['pretty_percent'])
-        widget.progress.set_show_text(True)
-        widget.pledged.set_text(metadata['pledged'])
-        widget.backers.set_text(metadata['backers'])
-        widget.updates.set_label(metadata['updates'])
-
-    return True
-
 
 def refresh_time(container):
     """
@@ -263,6 +276,7 @@ def refresh_time(container):
             widget.left.set_text(str(widget.end_date - now))
         else:
             widget.left.set_text('Done!')
+            widget.done = True
             win.complete.pack_start(widget, False, False, 0)
             container.remove(widget)
 
