@@ -206,10 +206,11 @@ def project_scrape(url):
 
     # Cut the timezone info off the string so we don't have to deal with it.
     time_string = time_div['data-end_time'].rsplit(' ', 1)[0]
+    percent_raised = float(pledge_div['data-percent-raised'])
 
     metadata = dict()
     metadata['title'] = soup.find('h1', {'id': 'title'}).a.string
-    metadata['percent_raised'] = float(pledge_div['data-percent-raised'])
+    metadata['percent_raised'] = percent_raised
     metadata['pretty_percent'] = '%.2f%%' % (percent_raised * 100)
     metadata['backers'] = backers['data-backers-count']
     metadata['pledged'] = locale.currency(float(pledge_div['data-pledged']),
