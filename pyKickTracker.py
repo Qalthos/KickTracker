@@ -5,9 +5,10 @@ import os.path
 import sys
 
 if sys.version_info.major == 2:
-    from urllib2 import urlopen
+    from urllib2 import urlopen, URLError
 else:
     from urllib.request import urlopen
+    from urllib.error import URLError
 
 from bs4 import BeautifulSoup
 
@@ -193,7 +194,10 @@ class SettingsPage(Gtk.VBox):
 
 
 def project_scrape(url):
-    raw_html = urlopen(url)
+    try:
+        raw_html = urlopen(url)
+    except URLError:
+        return None
     soup = BeautifulSoup(raw_html)
     pledge_div = soup.find('div', {'id': 'pledged'})
     time_div = soup.find('span', {'id': 'project_duration_data'})
