@@ -4,15 +4,9 @@ import locale
 import os.path
 import sys
 
-if sys.version_info.major == 2:
-    from urllib2 import urlopen, URLError
-else:
-    from urllib.request import urlopen
-    from urllib.error import URLError
-
 from bs4 import BeautifulSoup
-
 from gi.repository import Gtk, GdkPixbuf, GLib
+import requests
 
 import config
 
@@ -23,7 +17,9 @@ class TrackerWindow(Gtk.Window):
         icon_path = os.path.join(os.path.split(__file__)[0], 'favicon.ico')
         if not os.path.exists(icon_path):
             # download it
-            urlretrieve('http://www.kickstarter.com/favicon.ico', icon_path)
+            r = requests.get('http://www.kickstarter.com/favicon.ico')
+            with open(icon_path, 'w') as file_:
+                file_.write(r.content)
         self.set_default_icon(GdkPixbuf.Pixbuf.new_from_file(icon_path))
 
         notebook = Gtk.Notebook()
@@ -54,7 +50,8 @@ class TrackerWindow(Gtk.Window):
         # Build a list of backed projects
         url = 'http://www.kickstarter.com/profile/{0}' \
             .format(self.settings_page.settings['user']['profile'])
-        soup = BeautifulSoup(urlopen(url)).findAll('a', 'project_item')
+        r = requests.get(url)
+        soup = BeautifulSoup(r.text).findAll('a', 'project_item')
         projects = set(map(lambda x: x['href'], soup)).union(set(filter(bool,
             self.settings_page.settings['projects']['other'].split(', '))))
         now = datetime.utcnow()
@@ -232,11 +229,8 @@ class SettingsPage(Gtk.VBox):
 
 
 def project_scrape(url):
-    try:
-        raw_html = urlopen(url)
-    except URLError:
-        return None
-    soup = BeautifulSoup(raw_html)
+    r = requests.get(url)
+    soup = BeautifulSoup(r.text)
     pledge_div = soup.find('div', {'id': 'pledged'})
     time_div = soup.find('span', {'id': 'project_duration_data'})
     backers = soup.find('div', {'id': 'backers_count'})
