@@ -1,3 +1,4 @@
 settings.cfg
 favicon.ico
+*.pyc
 __pycache__
