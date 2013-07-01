@@ -1,4 +1,5 @@
 *.py?
+*.sw?
 settings.cfg
 favicon.ico
 *.pyc
