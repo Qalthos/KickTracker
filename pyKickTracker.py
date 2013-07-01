@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 from datetime import datetime, timedelta
 import locale
 import os.path
