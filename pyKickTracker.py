@@ -241,7 +241,7 @@ def project_scrape(url):
     percent_raised = float(pledge_div['data-percent-raised'])
 
     metadata = dict()
-    metadata['title'] = soup.find('h1', {'id': 'title'}).a.string
+    metadata['title'] = soup.find('h2', {'id': 'title'}).a.string
     metadata['percent_raised'] = percent_raised
     metadata['pretty_percent'] = '%.2f%%' % (percent_raised * 100)
     metadata['backers'] = backers['data-backers-count']
@@ -252,7 +252,6 @@ def project_scrape(url):
     metadata['updates'] = updates['data-updates-count']
 
     return metadata
-
 
 
 def refresh_time(container):
